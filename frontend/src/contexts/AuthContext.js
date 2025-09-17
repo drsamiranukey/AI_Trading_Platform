@@ -144,9 +144,9 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: AUTH_ACTIONS.LOGIN_START });
 
     try {
-      const response = await apiService.post('/auth/login', {
-        username: email, // API expects username field
-        password
+      const response = await apiService.login({
+        email: email,
+        password: password
       });
 
       const { access_token, user } = response.data;
@@ -168,7 +168,7 @@ export const AuthProvider = ({ children }) => {
 
       return { success: true };
     } catch (error) {
-      const errorMessage = error.response?.data?.detail || 'Login failed';
+      const errorMessage = error.message || 'Login failed';
       dispatch({
         type: AUTH_ACTIONS.LOGIN_FAILURE,
         payload: errorMessage
@@ -182,27 +182,30 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: AUTH_ACTIONS.REGISTER_START });
 
     try {
-      const response = await apiService.post('/auth/register', userData);
-      const { access_token, user } = response.data;
+      const response = await apiService.register(userData);
+      
+      // Mock registration doesn't return tokens, so create them
+      const mockToken = 'mock_user_token_' + Date.now();
+      const user = response.data;
 
       // Store in localStorage
-      localStorage.setItem('token', access_token);
+      localStorage.setItem('token', mockToken);
       localStorage.setItem('user', JSON.stringify(user));
 
       // Set token in API service
-      apiService.setAuthToken(access_token);
+      apiService.setAuthToken(mockToken);
 
       dispatch({
         type: AUTH_ACTIONS.REGISTER_SUCCESS,
         payload: {
           user,
-          token: access_token
+          token: mockToken
         }
       });
 
       return { success: true };
     } catch (error) {
-      const errorMessage = error.response?.data?.detail || 'Registration failed';
+      const errorMessage = error.message || 'Registration failed';
       dispatch({
         type: AUTH_ACTIONS.REGISTER_FAILURE,
         payload: errorMessage

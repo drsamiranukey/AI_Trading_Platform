@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Base URL for API
-const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1';
+// Base URL for API - Using mock API for demo
+const BASE_URL = process.env.REACT_APP_API_URL || 'https://jsonplaceholder.typicode.com';
 
 // Create axios instance
 const apiClient = axios.create({
@@ -105,11 +105,69 @@ class ApiService {
 
   // Authentication endpoints
   async login(credentials) {
-    return this.post('/auth/login', credentials);
+    // Mock login for demo purposes
+    if (credentials.email === 'admin@aitrading.com' && credentials.password === 'admin123') {
+      return {
+        data: {
+          access_token: 'mock_admin_token_' + Date.now(),
+          refresh_token: 'mock_refresh_token_' + Date.now(),
+          token_type: 'bearer',
+          expires_in: 1800,
+          user: {
+            id: 1,
+            email: 'admin@aitrading.com',
+            username: 'admin',
+            full_name: 'System Administrator',
+            role: 'admin',
+            is_active: true,
+            is_verified: true
+          }
+        }
+      };
+    } else if (credentials.email && credentials.password) {
+      // Mock regular user login
+      return {
+        data: {
+          access_token: 'mock_user_token_' + Date.now(),
+          refresh_token: 'mock_refresh_token_' + Date.now(),
+          token_type: 'bearer',
+          expires_in: 1800,
+          user: {
+            id: 2,
+            email: credentials.email,
+            username: credentials.email.split('@')[0],
+            full_name: 'Demo User',
+            role: 'free',
+            is_active: true,
+            is_verified: true
+          }
+        }
+      };
+    } else {
+      throw new Error('Invalid credentials');
+    }
   }
 
   async register(userData) {
-    return this.post('/auth/register', userData);
+    // Mock registration for demo purposes
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
+    
+    return {
+      data: {
+        id: Math.floor(Math.random() * 1000) + 100,
+        email: userData.email,
+        username: userData.username || userData.email.split('@')[0],
+        full_name: userData.full_name || `${userData.first_name} ${userData.last_name}`,
+        phone: userData.phone,
+        country: userData.country,
+        timezone: userData.timezone,
+        subscription_plan: userData.subscription_plan || 'basic',
+        role: 'free',
+        is_active: true,
+        is_verified: false,
+        created_at: new Date().toISOString()
+      }
+    };
   }
 
   async logout() {
@@ -121,7 +179,35 @@ class ApiService {
   }
 
   async getCurrentUser() {
-    return this.get('/auth/me');
+    // Mock current user for demo purposes
+    const token = localStorage.getItem('token');
+    if (token && token.includes('admin')) {
+      return {
+        data: {
+          id: 1,
+          email: 'admin@aitrading.com',
+          username: 'admin',
+          full_name: 'System Administrator',
+          role: 'admin',
+          is_active: true,
+          is_verified: true
+        }
+      };
+    } else if (token) {
+      return {
+        data: {
+          id: 2,
+          email: 'user@demo.com',
+          username: 'demo_user',
+          full_name: 'Demo User',
+          role: 'free',
+          is_active: true,
+          is_verified: true
+        }
+      };
+    } else {
+      throw new Error('Not authenticated');
+    }
   }
 
   async updateProfile(userData) {

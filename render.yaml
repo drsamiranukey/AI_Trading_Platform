@@ -19,10 +19,11 @@ services:
         value: "https://ai-trading-frontend.onrender.com"
 
   # Frontend Static Site
-  - type: static
+  - type: web
     name: ai-trading-frontend
+    env: static
     buildCommand: "cd frontend && npm install && npm run build"
-    publishPath: frontend/build
+    staticPublishPath: frontend/build
     routes:
       - type: rewrite
         source: /*
@@ -50,4 +51,3 @@ databases:
   - name: ai-trading-db
     databaseName: ai_trading_platform
     user: ai_trading_user
-    plan: free

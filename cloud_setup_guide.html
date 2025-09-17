@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Trading Platform - Cloud Setup Guide</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 1.2em;
+            margin-bottom: 40px;
+        }
+        .option-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 5px solid #3498db;
+            transition: transform 0.3s ease;
+        }
+        .option-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .recommended {
+            border-left-color: #e74c3c;
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%);
+        }
+        .option-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .features {
+            list-style: none;
+            padding: 0;
+        }
+        .features li {
+            padding: 5px 0;
+            position: relative;
+            padding-left: 25px;
+        }
+        .features li:before {
+            content: "✅";
+            position: absolute;
+            left: 0;
+        }
+        .steps {
+            background: #e8f4fd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .steps ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .quick-start {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 30px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        .quick-start h2 {
+            margin-top: 0;
+            color: white;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 25px;
+            background: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px;
+            transition: background 0.3s ease;
+        }
+        .btn:hover {
+            background: #2980b9;
+        }
+        .btn-primary {
+            background: #e74c3c;
+        }
+        .btn-primary:hover {
+            background: #c0392b;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .code {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>☁️ AI Trading Platform</h1>
+        <p class="subtitle">Cloud Setup Guide - No Local Installation Required</p>
+
+        <div class="warning">
+            <strong>🎯 Perfect Solution:</strong> Since you don't want to install anything locally, these cloud options will run your entire AI Trading Platform online with zero local setup!
+        </div>
+
+        <div class="option-card recommended">
+            <div class="option-title">🚀 GitHub Codespaces ⭐ (Recommended)</div>
+            <ul class="features">
+                <li>Full VS Code experience in browser</li>
+                <li>60 hours free per month</li>
+                <li>Automatic environment setup</li>
+                <li>Professional development tools</li>
+                <li>Integrated terminal and debugging</li>
+            </ul>
+            <div class="steps">
+                <strong>Quick Start:</strong>
+                <ol>
+                    <li>Push your code to GitHub repository</li>
+                    <li>Go to your repo → Click "Code" button</li>
+                    <li>Select "Codespaces" → "Create codespace"</li>
+                    <li>Wait for automatic setup (2-3 minutes)</li>
+                    <li>Run: <code>./start_all.sh</code></li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="option-card">
+            <div class="option-title">⚡ Gitpod</div>
+            <ul class="features">
+                <li>Instant workspace launch</li>
+                <li>50 hours free per month</li>
+                <li>Browser-based VS Code</li>
+                <li>Auto-starts your application</li>
+                <li>Collaborative development</li>
+            </ul>
+            <div class="steps">
+                <strong>Quick Start:</strong>
+                <ol>
+                    <li>Visit: <code>https://gitpod.io/#https://github.com/[your-repo]</code></li>
+                    <li>Sign in with GitHub</li>
+                    <li>Everything starts automatically</li>
+                    <li>Your app will be running immediately</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="option-card">
+            <div class="option-title">🔧 Repl.it</div>
+            <ul class="features">
+                <li>Simplest setup process</li>
+                <li>No configuration needed</li>
+                <li>Instant coding environment</li>
+                <li>Built-in package management</li>
+                <li>Real-time collaboration</li>
+            </ul>
+            <div class="steps">
+                <strong>Quick Start:</strong>
+                <ol>
+                    <li>Go to <a href="https://replit.com" target="_blank">replit.com</a></li>
+                    <li>Click "Import from GitHub"</li>
+                    <li>Enter your repository URL</li>
+                    <li>Click "Run" - everything works automatically</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="quick-start">
+            <h2>🎯 Your Platform Will Run At:</h2>
+            <p><strong>Frontend:</strong> https://[workspace-url]:3000</p>
+            <p><strong>WebSocket:</strong> wss://[workspace-url]:8765</p>
+            <p><strong>Full real-time trading signals functionality</strong></p>
+        </div>
+
+        <div class="option-card">
+            <div class="option-title">📁 Files I've Created for You:</div>
+            <ul class="features">
+                <li><strong>.gitpod.yml</strong> - Gitpod configuration</li>
+                <li><strong>.devcontainer/</strong> - GitHub Codespaces setup</li>
+                <li><strong>.replit</strong> - Repl.it configuration</li>
+                <li><strong>setup.sh</strong> - Automatic dependency installer</li>
+                <li><strong>CLOUD_SETUP.md</strong> - Detailed documentation</li>
+            </ul>
+        </div>
+
+        <div class="code">
+            <strong>💡 What Happens Automatically:</strong><br>
+            ✅ Python 3.11 installation<br>
+            ✅ Node.js 18 installation<br>
+            ✅ Backend dependencies (pip install -r requirements.txt)<br>
+            ✅ Frontend dependencies (npm install)<br>
+            ✅ WebSocket server startup<br>
+            ✅ React development server startup<br>
+            ✅ Port forwarding configuration
+        </div>
+
+        <div class="warning">
+            <strong>🚀 Recommendation:</strong> Start with <strong>GitHub Codespaces</strong> for the best experience. It provides a full development environment with all the tools you need, and the free tier is generous for development work.
+        </div>
+
+        <div style="text-align: center; margin-top: 40px;">
+            <a href="https://github.com/codespaces" class="btn btn-primary" target="_blank">Try GitHub Codespaces</a>
+            <a href="https://gitpod.io" class="btn" target="_blank">Try Gitpod</a>
+            <a href="https://replit.com" class="btn" target="_blank">Try Repl.it</a>
+        </div>
+    </div>
+</body>
+</html>

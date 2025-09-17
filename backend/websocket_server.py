@@ -8,9 +8,15 @@ import numpy as np
 from typing import Dict, List, Set
 import MetaTrader5 as mt5
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Import the real-time signal service
+from app.services.realtime_signal_service import realtime_signal_service
+
+# Import logging configuration
+from logging_config import setup_logging
+
+# Configure comprehensive logging
+setup_logging(log_level=logging.INFO)
+logger = logging.getLogger('websocket_server')
 
 class MarketDataStreamer:
     def __init__(self):
@@ -22,7 +28,8 @@ class MarketDataStreamer:
         # Currency pairs to stream
         self.symbols = [
             'EURUSD', 'GBPUSD', 'USDJPY', 'USDCHF', 'AUDUSD', 
-            'USDCAD', 'NZDUSD', 'EURJPY', 'GBPJPY', 'EURGBP'
+            'USDCAD', 'NZDUSD', 'EURJPY', 'GBPJPY', 'EURGBP',
+            'XAUUSD', 'BTCUSD', 'ETHUSD'  # Added Gold and Crypto
         ]
         
         # Initialize MT5 connection
@@ -44,13 +51,17 @@ class MarketDataStreamer:
     async def register_client(self, websocket, path):
         """Register a new WebSocket client"""
         self.connected_clients.add(websocket)
-        logger.info(f"Client connected. Total clients: {len(self.connected_clients)}")
+        
+        # Add client to real-time signal service
+        realtime_signal_service.add_subscriber(websocket)
+        
+        logger.info(f"🔗 Client connected. Total clients: {len(self.connected_clients)}")
         
         try:
-            # Send initial market data
+            # Send initial data to the client
             await self.send_initial_data(websocket)
             
-            # Handle client messages
+            # Handle incoming messages
             async for message in websocket:
                 await self.handle_message(websocket, message)
                 
@@ -65,11 +76,14 @@ class MarketDataStreamer:
         """Unregister a WebSocket client"""
         self.connected_clients.discard(websocket)
         
-        # Remove from all subscriptions
+        # Remove client from real-time signal service
+        realtime_signal_service.remove_subscriber(websocket)
+        
+        # Remove from all symbol subscriptions
         for symbol_clients in self.subscriptions.values():
             symbol_clients.discard(websocket)
             
-        logger.info(f"Client unregistered. Total clients: {len(self.connected_clients)}")
+        logger.info(f"🔌 Client disconnected. Total clients: {len(self.connected_clients)}")
     
     async def handle_message(self, websocket, message):
         """Handle incoming WebSocket messages"""
@@ -121,6 +135,7 @@ class MarketDataStreamer:
     
     async def send_initial_data(self, websocket):
         """Send initial market data to new client"""
+        # Send initial data to new client
         try:
             # Send market overview
             market_data = await self.get_market_overview()
@@ -129,8 +144,20 @@ class MarketDataStreamer:
                 'data': market_data
             }))
             
-            # Send trading signals
-            await self.send_trading_signals(websocket)
+            # Send current active signals from real-time service
+            active_signals = realtime_signal_service.get_active_signals()
+            if active_signals:
+                await websocket.send(json.dumps({
+                    'type': 'active_signals',
+                    'data': active_signals
+                }))
+            
+            # Send signal statistics
+            stats = realtime_signal_service.get_signal_statistics()
+            await websocket.send(json.dumps({
+                'type': 'signal_statistics',
+                'data': stats
+            }))
             
             # Send portfolio data
             await self.send_portfolio_data(websocket)
@@ -286,33 +313,20 @@ class MarketDataStreamer:
                 logger.error(f"Broadcast error: {e}")
                 await asyncio.sleep(5)
     
-    async def broadcast_signals(self):
-        """Broadcast new trading signals periodically"""
-        while self.running:
-            try:
-                if self.connected_clients:
-                    # Generate new signals every 30 seconds
-                    for client in self.connected_clients.copy():
-                        try:
-                            await self.send_trading_signals(client)
-                        except websockets.exceptions.ConnectionClosed:
-                            self.connected_clients.discard(client)
-                        except Exception as e:
-                            logger.error(f"Error sending signals: {e}")
-                
-                await asyncio.sleep(30)  # New signals every 30 seconds
-                
-            except Exception as e:
-                logger.error(f"Signal broadcast error: {e}")
-                await asyncio.sleep(60)
-    
     async def start_server(self, host='localhost', port=8765):
         """Start the WebSocket server"""
         self.running = True
         
+        # Start the real-time signal service
+        await realtime_signal_service.start_service()
+        logger.info("🚀 Real-time signal service started")
+        
         # Start background tasks
-        asyncio.create_task(self.broadcast_price_updates())
-        asyncio.create_task(self.broadcast_signals())
+        price_task = asyncio.create_task(self.broadcast_price_updates())
+        logger.info("📊 Price update loop started")
+        
+        # The signal broadcasting is now handled by the realtime_signal_service
+        logger.info("📡 Live signal broadcasting enabled")
         
         logger.info(f"Starting WebSocket server on {host}:{port}")
         

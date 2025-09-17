@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 AI Trading Platform - Connection Diagnostic Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .diagnostic-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .diagnostic-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            border-left: 5px solid #3498db;
+        }
+
+        .diagnostic-card h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-disconnected { background-color: #e74c3c; }
+        .status-connecting { background-color: #f39c12; }
+        .status-connected { background-color: #27ae60; }
+
+        .connection-controls {
+            background: #ecf0f1;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: #2c3e50;
+            min-width: 120px;
+        }
+
+        .control-group input, .control-group select {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #bdc3c7;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .control-group input:focus, .control-group select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .btn-warning {
+            background: #f39c12;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #e67e22;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .logs-container {
+            background: #2c3e50;
+            color: #ecf0f1;
+            border-radius: 10px;
+            padding: 20px;
+            height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-radius: 3px;
+        }
+
+        .log-info { background-color: rgba(52, 152, 219, 0.2); }
+        .log-success { background-color: rgba(39, 174, 96, 0.2); }
+        .log-warning { background-color: rgba(243, 156, 18, 0.2); }
+        .log-error { background-color: rgba(231, 76, 60, 0.2); }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .setup-instructions {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .setup-instructions h3 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+
+        .setup-instructions ol {
+            color: #856404;
+            padding-left: 20px;
+        }
+
+        .setup-instructions li {
+            margin-bottom: 8px;
+        }
+
+        .setup-instructions code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+
+        @media (max-width: 768px) {
+            .diagnostic-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .control-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .control-group label {
+                min-width: auto;
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 Connection Diagnostic Tool</h1>
+            <p>AI Trading Platform - Backend & Frontend Connection Tester</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Setup Instructions -->
+            <div class="setup-instructions">
+                <h3>🚨 Connection Problem Detected</h3>
+                <p><strong>Root Cause:</strong> Python and Node.js are not installed or not in PATH.</p>
+                <ol>
+                    <li><strong>Install Python:</strong> Download from <code>python.org</code> and check "Add to PATH"</li>
+                    <li><strong>Install Node.js:</strong> Download from <code>nodejs.org</code></li>
+                    <li><strong>Restart Terminal:</strong> Close and reopen PowerShell/Command Prompt</li>
+                    <li><strong>Verify Installation:</strong> Run <code>python --version</code> and <code>node --version</code></li>
+                    <li><strong>Install Dependencies:</strong> Run <code>pip install -r requirements.txt</code> in backend folder</li>
+                    <li><strong>Start Backend:</strong> Run <code>python simple_websocket_test.py</code> in backend folder</li>
+                </ol>
+            </div>
+
+            <!-- Diagnostic Cards -->
+            <div class="diagnostic-grid">
+                <div class="diagnostic-card">
+                    <h3>🔌 WebSocket Connection</h3>
+                    <p><span id="wsStatus" class="status-indicator status-disconnected"></span><span id="wsStatusText">Disconnected</span></p>
+                    <p><strong>URL:</strong> <span id="wsUrl">ws://localhost:8765</span></p>
+                    <p><strong>Last Attempt:</strong> <span id="lastAttempt">Never</span></p>
+                </div>
+
+                <div class="diagnostic-card">
+                    <h3>📊 Connection Stats</h3>
+                    <p><strong>Attempts:</strong> <span id="connectionAttempts">0</span></p>
+                    <p><strong>Successful:</strong> <span id="successfulConnections">0</span></p>
+                    <p><strong>Failed:</strong> <span id="failedConnections">0</span></p>
+                </div>
+            </div>
+
+            <!-- Connection Controls -->
+            <div class="connection-controls">
+                <h3>🎛️ Connection Controls</h3>
+                
+                <div class="control-group">
+                    <label>WebSocket URL:</label>
+                    <input type="text" id="wsUrlInput" value="ws://localhost:8765" placeholder="ws://localhost:8765">
+                </div>
+
+                <div class="control-group">
+                    <label>Test Message:</label>
+                    <input type="text" id="testMessage" value='{"type":"test","message":"Hello from diagnostic tool"}' placeholder="Enter JSON message">
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="connectWebSocket()">🔌 Connect</button>
+                    <button class="btn btn-danger" onclick="disconnectWebSocket()">❌ Disconnect</button>
+                    <button class="btn btn-success" onclick="sendTestMessage()">📤 Send Test</button>
+                    <button class="btn btn-warning" onclick="runDiagnostics()">🔍 Run Diagnostics</button>
+                    <button class="btn btn-primary" onclick="clearLogs()">🧹 Clear Logs</button>
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="messagesReceived">0</div>
+                    <div class="stat-label">Messages Received</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="messagesSent">0</div>
+                    <div class="stat-label">Messages Sent</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="uptime">0s</div>
+                    <div class="stat-label">Connection Uptime</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="latency">-</div>
+                    <div class="stat-label">Avg Latency (ms)</div>
+                </div>
+            </div>
+
+            <!-- Logs -->
+            <div class="logs-container" id="logsContainer">
+                <div class="log-entry log-info">🔧 Connection Diagnostic Tool initialized</div>
+                <div class="log-entry log-warning">⚠️ Ready to test WebSocket connections</div>
+                <div class="log-entry log-info">💡 Make sure the backend server is running first</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let connectionAttempts = 0;
+        let successfulConnections = 0;
+        let failedConnections = 0;
+        let messagesReceived = 0;
+        let messagesSent = 0;
+        let connectionStartTime = null;
+        let latencyMeasurements = [];
+
+        function log(message, type = 'info') {
+            const logsContainer = document.getElementById('logsContainer');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            logsContainer.appendChild(logEntry);
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+        }
+
+        function updateStats() {
+            document.getElementById('connectionAttempts').textContent = connectionAttempts;
+            document.getElementById('successfulConnections').textContent = successfulConnections;
+            document.getElementById('failedConnections').textContent = failedConnections;
+            document.getElementById('messagesReceived').textContent = messagesReceived;
+            document.getElementById('messagesSent').textContent = messagesSent;
+            
+            if (connectionStartTime && ws && ws.readyState === WebSocket.OPEN) {
+                const uptime = Math.floor((Date.now() - connectionStartTime) / 1000);
+                document.getElementById('uptime').textContent = `${uptime}s`;
+            } else {
+                document.getElementById('uptime').textContent = '0s';
+            }
+
+            if (latencyMeasurements.length > 0) {
+                const avgLatency = latencyMeasurements.reduce((a, b) => a + b, 0) / latencyMeasurements.length;
+                document.getElementById('latency').textContent = `${Math.round(avgLatency)}ms`;
+            }
+        }
+
+        function updateConnectionStatus(status, text) {
+            const statusIndicator = document.getElementById('wsStatus');
+            const statusText = document.getElementById('wsStatusText');
+            
+            statusIndicator.className = `status-indicator status-${status}`;
+            statusText.textContent = text;
+            
+            document.getElementById('lastAttempt').textContent = new Date().toLocaleTimeString();
+        }
+
+        function connectWebSocket() {
+            const url = document.getElementById('wsUrlInput').value;
+            
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                log('⚠️ Already connected to WebSocket', 'warning');
+                return;
+            }
+
+            connectionAttempts++;
+            updateConnectionStatus('connecting', 'Connecting...');
+            log(`🔌 Attempting to connect to: ${url}`, 'info');
+
+            try {
+                ws = new WebSocket(url);
+                
+                ws.onopen = function(event) {
+                    successfulConnections++;
+                    connectionStartTime = Date.now();
+                    updateConnectionStatus('connected', 'Connected');
+                    log('✅ WebSocket connection established successfully!', 'success');
+                    updateStats();
+                };
+
+                ws.onmessage = function(event) {
+                    messagesReceived++;
+                    try {
+                        const data = JSON.parse(event.data);
+                        log(`📨 Received: ${JSON.stringify(data, null, 2)}`, 'success');
+                        
+                        // Calculate latency if this is a ping response
+                        if (data.type === 'pong' && data.timestamp) {
+                            const latency = Date.now() - data.timestamp;
+                            latencyMeasurements.push(latency);
+                            if (latencyMeasurements.length > 10) {
+                                latencyMeasurements.shift(); // Keep only last 10 measurements
+                            }
+                        }
+                    } catch (e) {
+                        log(`📨 Received (raw): ${event.data}`, 'info');
+                    }
+                    updateStats();
+                };
+
+                ws.onclose = function(event) {
+                    connectionStartTime = null;
+                    updateConnectionStatus('disconnected', 'Disconnected');
+                    
+                    if (event.wasClean) {
+                        log(`🔌 Connection closed cleanly (code: ${event.code})`, 'info');
+                    } else {
+                        failedConnections++;
+                        log(`❌ Connection lost unexpectedly (code: ${event.code})`, 'error');
+                    }
+                    updateStats();
+                };
+
+                ws.onerror = function(error) {
+                    failedConnections++;
+                    updateConnectionStatus('disconnected', 'Error');
+                    log(`❌ WebSocket error: ${error.message || 'Connection failed'}`, 'error');
+                    log('💡 Make sure the backend server is running on the specified port', 'warning');
+                    updateStats();
+                };
+
+            } catch (error) {
+                failedConnections++;
+                updateConnectionStatus('disconnected', 'Error');
+                log(`❌ Failed to create WebSocket: ${error.message}`, 'error');
+                updateStats();
+            }
+        }
+
+        function disconnectWebSocket() {
+            if (ws) {
+                ws.close();
+                log('🔌 WebSocket connection closed by user', 'info');
+            } else {
+                log('⚠️ No active WebSocket connection to close', 'warning');
+            }
+        }
+
+        function sendTestMessage() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                log('❌ Cannot send message: WebSocket not connected', 'error');
+                return;
+            }
+
+            const message = document.getElementById('testMessage').value;
+            
+            try {
+                // Add timestamp for latency measurement
+                const messageWithTimestamp = JSON.parse(message);
+                messageWithTimestamp.timestamp = Date.now();
+                
+                ws.send(JSON.stringify(messageWithTimestamp));
+                messagesSent++;
+                log(`📤 Sent: ${JSON.stringify(messageWithTimestamp, null, 2)}`, 'info');
+                updateStats();
+            } catch (e) {
+                // If not valid JSON, send as is
+                ws.send(message);
+                messagesSent++;
+                log(`📤 Sent (raw): ${message}`, 'info');
+                updateStats();
+            }
+        }
+
+        function runDiagnostics() {
+            log('🔍 Running connection diagnostics...', 'info');
+            
+            // Test different common WebSocket URLs
+            const testUrls = [
+                'ws://localhost:8765',
+                'ws://localhost:8766',
+                'ws://localhost:8767',
+                'ws://127.0.0.1:8765',
+                'ws://localhost:3001',
+                'ws://localhost:8080'
+            ];
+
+            log('🌐 Testing common WebSocket URLs:', 'info');
+            
+            testUrls.forEach((url, index) => {
+                setTimeout(() => {
+                    log(`🔍 Testing: ${url}`, 'info');
+                    
+                    const testWs = new WebSocket(url);
+                    
+                    testWs.onopen = function() {
+                        log(`✅ ${url} - Connection successful!`, 'success');
+                        testWs.close();
+                    };
+                    
+                    testWs.onerror = function() {
+                        log(`❌ ${url} - Connection failed`, 'error');
+                    };
+                    
+                    testWs.onclose = function() {
+                        // Connection attempt finished
+                    };
+                    
+                    // Timeout after 3 seconds
+                    setTimeout(() => {
+                        if (testWs.readyState === WebSocket.CONNECTING) {
+                            testWs.close();
+                            log(`⏰ ${url} - Connection timeout`, 'warning');
+                        }
+                    }, 3000);
+                    
+                }, index * 1000); // Stagger tests by 1 second
+            });
+
+            // Browser and environment info
+            setTimeout(() => {
+                log('🌐 Browser Information:', 'info');
+                log(`   User Agent: ${navigator.userAgent}`, 'info');
+                log(`   WebSocket Support: ${typeof WebSocket !== 'undefined' ? 'Yes' : 'No'}`, 'info');
+                log(`   Current URL: ${window.location.href}`, 'info');
+                log(`   Protocol: ${window.location.protocol}`, 'info');
+            }, testUrls.length * 1000 + 1000);
+        }
+
+        function clearLogs() {
+            const logsContainer = document.getElementById('logsContainer');
+            logsContainer.innerHTML = '';
+            log('🧹 Logs cleared', 'info');
+        }
+
+        // Update stats every second
+        setInterval(updateStats, 1000);
+
+        // Auto-run diagnostics on page load
+        setTimeout(() => {
+            log('🚀 Auto-running initial diagnostics...', 'info');
+            runDiagnostics();
+        }, 2000);
+    </script>
+</body>
+</html>

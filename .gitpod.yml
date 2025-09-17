@@ -1,0 +1,87 @@
+# Gitpod Configuration for AI Trading Platform
+# This enables instant cloud development environment with zero setup
+
+image: gitpod/workspace-full:latest
+
+# Ports to expose with proper configuration
+ports:
+  - port: 3000
+    onOpen: open-browser
+    name: Frontend (React)
+    description: AI Trading Platform Frontend - Main Interface
+    visibility: public
+  - port: 8765
+    onOpen: notify
+    name: WebSocket Server
+    description: Real-time Trading Signals WebSocket
+    visibility: public
+  - port: 8000
+    onOpen: notify
+    name: FastAPI Backend
+    description: Main API Server (if needed)
+    visibility: public
+
+# Environment variables
+env:
+  PYTHONPATH: /workspace/AI_Trading_Platform/backend
+  NODE_ENV: development
+  REACT_APP_WS_URL: wss://8765-${GITPOD_WORKSPACE_ID}.${GITPOD_WORKSPACE_CLUSTER_HOST}
+
+# Tasks to run on workspace startup
+tasks:
+  - name: System Setup
+    init: |
+      echo "🔧 Setting up AI Trading Platform..."
+      # Update system packages
+      sudo apt-get update -q
+      # Install Python 3.11 if not available
+      python3 --version
+      pip3 --version
+      node --version
+      npm --version
+      echo "✅ System ready"
+      
+  - name: Backend Setup & Start
+    init: |
+      cd backend
+      echo "📦 Installing Python dependencies..."
+      pip3 install -r requirements.txt
+      echo "✅ Backend dependencies installed"
+      echo "🔧 Setting up logging directory..."
+      mkdir -p logs
+      echo "✅ Backend setup complete"
+    command: |
+      cd backend
+      echo "🚀 Starting WebSocket server on port 8765..."
+      echo "📊 Real-time trading signals will be available"
+      echo "🌐 WebSocket URL: wss://8765-${GITPOD_WORKSPACE_ID}.${GITPOD_WORKSPACE_CLUSTER_HOST}"
+      python3 websocket_server.py
+      
+  - name: Frontend Setup & Start
+    init: |
+      cd frontend
+      echo "📦 Installing Node.js dependencies..."
+      npm install
+      echo "✅ Frontend dependencies installed"
+    command: |
+      cd frontend
+      echo "🚀 Starting React development server..."
+      echo "🌐 Frontend URL: https://3000-${GITPOD_WORKSPACE_ID}.${GITPOD_WORKSPACE_CLUSTER_HOST}"
+      echo "📱 AI Trading Platform will open automatically"
+      npm start
+
+# VS Code extensions to install
+vscode:
+  extensions:
+    - ms-python.python
+    - bradlc.vscode-tailwindcss
+    - esbenp.prettier-vscode
+    - ms-vscode.vscode-typescript-next
+    - ms-vscode.vscode-json
+
+# GitHub integration
+github:
+  prebuilds:
+    master: true
+    branches: true
+    pullRequests: true

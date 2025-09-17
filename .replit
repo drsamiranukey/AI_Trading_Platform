@@ -1,0 +1,65 @@
+# Repl.it configuration file
+run = """
+echo "🚀 Starting AI Trading Platform..."
+echo "📦 Installing dependencies..."
+
+# Install backend dependencies
+cd backend
+pip install -r requirements.txt
+cd ..
+
+# Install frontend dependencies
+cd frontend
+npm install
+cd ..
+
+echo "✅ Dependencies installed!"
+echo ""
+echo "🎯 Starting services..."
+echo "📍 Backend will run on port 8765"
+echo "📍 Frontend will run on port 3000"
+echo ""
+
+# Start backend in background
+cd backend
+python websocket_server.py &
+BACKEND_PID=$!
+cd ..
+
+# Wait for backend to start
+sleep 3
+
+# Start frontend
+cd frontend
+npm start &
+FRONTEND_PID=$!
+cd ..
+
+echo "✅ AI Trading Platform is running!"
+echo ""
+echo "🌐 Access URLs:"
+echo "  Frontend: https://[repl-name].[username].repl.co"
+echo "  WebSocket: wss://[repl-name].[username].repl.co:8765"
+echo ""
+echo "Press Ctrl+C to stop"
+
+# Keep the script running
+wait
+"""
+
+language = "python3"
+modules = ["python-3.11", "nodejs-18"]
+
+[nix]
+channel = "stable-22_11"
+
+[deployment]
+run = ["python", "backend/websocket_server.py"]
+deploymentTarget = "cloudrun"
+
+[ports]
+[ports.3000]
+exposedPort = 80
+
+[ports.8765]
+exposedPort = 8765

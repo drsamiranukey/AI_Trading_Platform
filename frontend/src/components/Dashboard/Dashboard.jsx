@@ -48,6 +48,8 @@ import MarketSentiment from './MarketSentiment';
 import PortfolioManagement from './PortfolioManagement';
 import AdvancedTrading from '../Trading/AdvancedTrading';
 import AIBotStatus from '../Trading/AIBotStatus';
+import RealTimeSignals from '../RealTimeSignals';
+import LiveSignals from '../Trading/LiveSignals';
 import ThemeToggle from '../Common/ThemeToggle';
 import { useAuth } from '../Auth/AuthProvider';
 import websocketService, { useWebSocket } from '../../services/websocketService';
@@ -439,6 +441,7 @@ const Dashboard = () => {
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
           <Tabs value={activeTab} onChange={handleTabChange}>
             <Tab label="Overview" />
+            <Tab label="Live Signals" />
             <Tab label="Signals" />
             <Tab label="Accounts" />
             <Tab label="Trading Bot" />
@@ -509,30 +512,34 @@ const Dashboard = () => {
           )}
 
           {activeTab === 1 && (
-            <SignalsList signals={tradingSignals || []} />
+            <LiveSignals />
           )}
 
           {activeTab === 2 && (
-            <AccountOverview accounts={dashboardData.accountSummary || []} />
+            <SignalsList signals={tradingSignals || []} />
           )}
 
           {activeTab === 3 && (
-            <TradingBotStatus botStatus={dashboardData.botStatus} />
+            <AccountOverview accounts={dashboardData.accountSummary || []} />
           )}
 
           {activeTab === 4 && (
-            <PortfolioManagement data={portfolioData} />
+            <TradingBotStatus botStatus={dashboardData.botStatus} />
           )}
 
           {activeTab === 5 && (
-            <AdvancedTrading />
+            <PortfolioManagement data={portfolioData} />
           )}
 
           {activeTab === 6 && (
-            <AIBotStatus />
+            <AdvancedTrading />
           )}
 
           {activeTab === 7 && (
+            <AIBotStatus />
+          )}
+
+          {activeTab === 8 && (
             <MarketSentiment sentiment={dashboardData.marketSentiment} />
           )}
         </CardContent>

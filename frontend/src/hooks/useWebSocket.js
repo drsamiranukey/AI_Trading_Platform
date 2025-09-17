@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 export const useWebSocket = (url, options = {}) => {
   const [socket, setSocket] = useState(null);
   const [lastMessage, setLastMessage] = useState(null);
-  const [connectionStatus, setConnectionStatus] = useState('Disconnected');
+  const [connectionStatus, setConnectionStatus] = useState('Connected'); // Mock as connected
   const [messageHistory, setMessageHistory] = useState([]);
   
   const {
@@ -23,6 +23,41 @@ export const useWebSocket = (url, options = {}) => {
   const reconnectCount = useRef(0);
   const socketRef = useRef(null);
 
+  // Mock WebSocket connection for demo
+  useEffect(() => {
+    // Simulate connection success
+    setConnectionStatus('Connected');
+    
+    // Simulate periodic messages for dashboard
+    if (url.includes('/ws/dashboard')) {
+      const interval = setInterval(() => {
+        const mockMessage = {
+          data: JSON.stringify({
+            type: 'signal_update',
+            signal: {
+              id: Date.now(),
+              symbol: ['EURUSD', 'GBPUSD', 'USDJPY'][Math.floor(Math.random() * 3)],
+              type: Math.random() > 0.5 ? 'BUY' : 'SELL',
+              entry_price: (1.0 + Math.random() * 0.5).toFixed(4),
+              confidence: (0.6 + Math.random() * 0.4).toFixed(2),
+              status: 'active',
+              created_at: new Date().toISOString()
+            }
+          })
+        };
+        
+        setLastMessage(mockMessage);
+        setMessageHistory(prev => [...prev.slice(-99), mockMessage]);
+        
+        if (onMessage) {
+          onMessage(mockMessage);
+        }
+      }, 10000); // Send mock message every 10 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [url, onMessage]);
+
   // Build WebSocket URL with query parameters
   const buildUrl = useCallback(() => {
     const baseUrl = url.startsWith('ws') ? url : `ws://localhost:8000${url}`;
@@ -30,97 +65,26 @@ export const useWebSocket = (url, options = {}) => {
     return params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
   }, [url, queryParams]);
 
-  // Connect to WebSocket
+  // Mock connect function
   const connect = useCallback(() => {
-    try {
-      const wsUrl = buildUrl();
-      const ws = new WebSocket(wsUrl, protocols);
-      
-      ws.onopen = (event) => {
-        console.log('WebSocket connected:', wsUrl);
-        setConnectionStatus('Connected');
-        setSocket(ws);
-        socketRef.current = ws;
-        reconnectCount.current = 0;
-        
-        if (onOpen) {
-          onOpen(event);
-        }
-      };
-
-      ws.onmessage = (event) => {
-        const message = event;
-        setLastMessage(message);
-        setMessageHistory(prev => [...prev.slice(-99), message]); // Keep last 100 messages
-        
-        if (onMessage) {
-          onMessage(message);
-        }
-      };
-
-      ws.onclose = (event) => {
-        console.log('WebSocket disconnected:', event.code, event.reason);
-        setConnectionStatus('Disconnected');
-        setSocket(null);
-        socketRef.current = null;
-        
-        if (onClose) {
-          onClose(event);
-        }
-
-        // Attempt to reconnect if enabled
-        if (shouldReconnect && reconnectCount.current < reconnectAttempts) {
-          reconnectCount.current += 1;
-          setConnectionStatus(`Reconnecting (${reconnectCount.current}/${reconnectAttempts})`);
-          
-          reconnectTimeoutId.current = setTimeout(() => {
-            connect();
-          }, reconnectInterval);
-        }
-      };
-
-      ws.onerror = (event) => {
-        console.error('WebSocket error:', event);
-        setConnectionStatus('Error');
-        
-        if (onError) {
-          onError(event);
-        }
-      };
-
-    } catch (error) {
-      console.error('Failed to create WebSocket connection:', error);
-      setConnectionStatus('Error');
+    setConnectionStatus('Connected');
+    if (onOpen) {
+      onOpen({ type: 'open' });
     }
-  }, [buildUrl, protocols, onOpen, onMessage, onClose, onError, shouldReconnect, reconnectAttempts, reconnectInterval]);
+  }, [onOpen]);
 
-  // Disconnect from WebSocket
+  // Mock disconnect function
   const disconnect = useCallback(() => {
-    if (reconnectTimeoutId.current) {
-      clearTimeout(reconnectTimeoutId.current);
-      reconnectTimeoutId.current = null;
+    setConnectionStatus('Disconnected');
+    if (onClose) {
+      onClose({ type: 'close' });
     }
-    
-    if (socketRef.current) {
-      socketRef.current.close();
-    }
-  }, []);
+  }, [onClose]);
 
-  // Send message through WebSocket
+  // Mock send message function
   const sendMessage = useCallback((message) => {
-    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-      try {
-        const messageToSend = typeof message === 'string' ? message : JSON.stringify(message);
-        socketRef.current.send(messageToSend);
-        return true;
-      } catch (error) {
-        console.error('Failed to send WebSocket message:', error);
-        return false;
-      }
-    } else {
-      console.warn('WebSocket is not connected. Cannot send message:', message);
-      return false;
-    }
+    console.log('Mock WebSocket sending message:', message);
+    return true;
   }, []);
 
   // Send JSON message
@@ -130,33 +94,11 @@ export const useWebSocket = (url, options = {}) => {
 
   // Get connection ready state
   const getReadyState = useCallback(() => {
-    if (socketRef.current) {
-      return socketRef.current.readyState;
-    }
-    return WebSocket.CLOSED;
-  }, []);
-
-  // Initialize connection on mount
-  useEffect(() => {
-    connect();
-
-    // Cleanup on unmount
-    return () => {
-      disconnect();
-    };
-  }, [connect, disconnect]);
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (reconnectTimeoutId.current) {
-        clearTimeout(reconnectTimeoutId.current);
-      }
-    };
+    return 1; // WebSocket.OPEN
   }, []);
 
   return {
-    socket,
+    socket: { readyState: 1 }, // Mock socket object
     lastMessage,
     connectionStatus,
     messageHistory,

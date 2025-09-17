@@ -18,8 +18,8 @@ import LandingPage from './components/LandingPage/LandingPage';
 import Profile from './components/Profile/Profile';
 import Settings from './components/Settings/Settings';
 import MT5Accounts from './components/MT5/MT5Accounts';
-import TradingSignals from './components/Signals/TradingSignals';
-import TradingBot from './components/TradingBot/TradingBot';
+import TradingSignals from './components/Trading/TradingSignals';
+import TradingBot from './components/Trading/TradingBot';
 import NotFound from './components/Common/NotFound';
 
 function App() {

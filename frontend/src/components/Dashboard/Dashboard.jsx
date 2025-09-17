@@ -11,7 +11,9 @@ import {
   Alert,
   CircularProgress,
   Tabs,
-  Tab
+  Tab,
+  AppBar,
+  Toolbar
 } from '@mui/material';
 import {
   TrendingUp,
@@ -21,7 +23,10 @@ import {
   Refresh,
   Settings,
   PlayArrow,
-  Stop
+  Stop,
+  Dashboard as DashboardIcon,
+  Notifications,
+  Logout
 } from '@mui/icons-material';
 import { Line, Doughnut } from 'react-chartjs-2';
 import {
@@ -40,9 +45,12 @@ import SignalsList from './SignalsList';
 import AccountOverview from './AccountOverview';
 import TradingBotStatus from './TradingBotStatus';
 import MarketSentiment from './MarketSentiment';
-import { useAuth } from '../../contexts/AuthContext';
-import { useWebSocket } from '../../hooks/useWebSocket';
-import { apiService } from '../../services/api';
+import PortfolioManagement from './PortfolioManagement';
+import AdvancedTrading from '../Trading/AdvancedTrading';
+import AIBotStatus from '../Trading/AIBotStatus';
+import ThemeToggle from '../Common/ThemeToggle';
+import { useAuth } from '../Auth/AuthProvider';
+import websocketService, { useWebSocket } from '../../services/websocketService';
 
 // Register Chart.js components
 ChartJS.register(
@@ -57,86 +65,144 @@ ChartJS.register(
 );
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const { connectionStatus, connect } = useWebSocket();
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [dashboardData, setDashboardData] = useState({
-    accountSummary: null,
+    accountSummary: [],
     recentSignals: [],
-    marketSentiment: null,
-    performance: null,
-    botStatus: null
+    performance: {},
+    marketSentiment: {},
+    botStatus: {}
   });
-
-  // WebSocket for real-time updates
-  const { lastMessage, connectionStatus } = useWebSocket('/ws/dashboard');
+  const [marketData, setMarketData] = useState([]);
+  const [tradingSignals, setTradingSignals] = useState([]);
+  const [portfolioData, setPortfolioData] = useState(null);
+  const [notifications, setNotifications] = useState([]);
 
   // Load dashboard data
   const loadDashboardData = async () => {
     try {
       setLoading(true);
       setError(null);
-
-      const [
-        accountsResponse,
-        signalsResponse,
-        sentimentResponse,
-        performanceResponse
-      ] = await Promise.all([
-        apiService.get('/mt5/accounts'),
-        apiService.get('/signals?limit=10'),
-        apiService.get('/signals/analysis/market-sentiment'),
-        apiService.get('/signals/performance/stats')
-      ]);
-
-      setDashboardData({
-        accountSummary: accountsResponse.data,
-        recentSignals: signalsResponse.data,
-        marketSentiment: sentimentResponse.data,
-        performance: performanceResponse.data,
-        botStatus: null // Will be loaded separately
-      });
-
+      
+      // Mock data for now - will be replaced with real API calls
+      const mockData = {
+        accountSummary: [
+          {
+            id: 1,
+            balance: 50000,
+            equity: 48500,
+            margin: 2500,
+            free_margin: 46000,
+            profit: -1500,
+            currency: 'USD',
+            leverage: 100,
+            server: 'Demo Server'
+          }
+        ],
+        recentSignals: [
+          {
+            id: 1,
+            symbol: 'EURUSD',
+            type: 'BUY',
+            confidence: 0.85,
+            status: 'active',
+            entry_price: 1.0850,
+            stop_loss: 1.0820,
+            take_profit: 1.0900,
+            timestamp: new Date().toISOString()
+          }
+        ],
+        performance: {
+          accuracy: 78.5,
+          total_trades: 156,
+          winning_trades: 122,
+          profit_factor: 1.45
+        },
+        marketSentiment: {
+          overall_sentiment: 'bullish',
+          bullish_signals: 12,
+          bearish_signals: 8,
+          neutral_signals: 5
+        },
+        botStatus: {
+          status: 'running',
+          uptime: '2d 14h 32m',
+          trades_today: 8,
+          profit_today: 245.50
+        }
+      };
+      
+      setDashboardData(mockData);
+      setTradingSignals(mockData.recentSignals);
+      setPortfolioData(mockData.accountSummary[0]);
+      
     } catch (err) {
-      console.error('Error loading dashboard data:', err);
       setError('Failed to load dashboard data');
+      console.error('Dashboard data loading error:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle WebSocket messages
+  // Set up WebSocket listeners
   useEffect(() => {
-    if (lastMessage) {
-      const data = JSON.parse(lastMessage.data);
-      
-      switch (data.type) {
-        case 'signal_update':
-          setDashboardData(prev => ({
-            ...prev,
-            recentSignals: [data.signal, ...prev.recentSignals.slice(0, 9)]
-          }));
-          break;
-        case 'account_update':
-          setDashboardData(prev => ({
-            ...prev,
-            accountSummary: prev.accountSummary?.map(acc => 
-              acc.id === data.account.id ? { ...acc, ...data.account } : acc
-            )
-          }));
-          break;
-        case 'bot_status':
-          setDashboardData(prev => ({
-            ...prev,
-            botStatus: data.status
-          }));
-          break;
-        default:
-          break;
-      }
-    }
-  }, [lastMessage]);
+    const unsubscribeMarket = websocketService.addListener('market_overview', (data) => {
+      setMarketData(data);
+    });
+
+    const unsubscribeSignals = websocketService.addListener('trading_signals', (data) => {
+      setTradingSignals(data);
+      setDashboardData(prev => ({
+        ...prev,
+        recentSignals: data
+      }));
+      // Add notification for new signals
+      setNotifications(prev => [...prev, {
+        id: Date.now(),
+        message: `${data.length} new trading signals received`,
+        type: 'info',
+        timestamp: new Date()
+      }]);
+    });
+
+    const unsubscribePortfolio = websocketService.addListener('portfolio_update', (data) => {
+      setPortfolioData(data);
+      setDashboardData(prev => ({
+        ...prev,
+        accountSummary: [data]
+      }));
+    });
+
+    const unsubscribePriceUpdate = websocketService.addListener('price_update', ({ symbol, data }) => {
+      // Update market data with new price
+      setMarketData(prev => prev.map(item => 
+        item.symbol === symbol 
+          ? { ...item, price: data.bid, timestamp: data.timestamp }
+          : item
+      ));
+    });
+
+    const unsubscribeConnectionFailed = websocketService.addListener('connection_failed', (data) => {
+      setNotifications(prev => [...prev, {
+        id: Date.now(),
+        message: data.message,
+        type: 'error',
+        timestamp: new Date()
+      }]);
+    });
+
+    return () => {
+      unsubscribeMarket();
+      unsubscribeSignals();
+      unsubscribePortfolio();
+      unsubscribePriceUpdate();
+      unsubscribeConnectionFailed();
+    };
+  }, []);
 
   // Load data on component mount
   useEffect(() => {
@@ -187,7 +253,21 @@ const Dashboard = () => {
   };
 
   const handleRefresh = () => {
+    if (connectionStatus.connected) {
+      websocketService.requestSignals();
+      websocketService.requestPortfolio();
+    } else {
+      connect();
+    }
     loadDashboardData();
+  };
+
+  const handleLogout = () => {
+    logout();
+  };
+
+  const dismissNotification = (id) => {
+    setNotifications(prev => prev.filter(notif => notif.id !== id));
   };
 
   if (loading) {
@@ -199,29 +279,74 @@ const Dashboard = () => {
   }
 
   return (
-    <Box sx={{ flexGrow: 1, p: 3 }}>
-      {/* Header */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4" component="h1" fontWeight="bold">
-          Trading Dashboard
-        </Typography>
-        <Box display="flex" gap={1}>
+    <Box sx={{ flexGrow: 1 }}>
+      {/* App Bar */}
+      <AppBar position="static" elevation={1}>
+        <Toolbar>
+          <DashboardIcon sx={{ mr: 2 }} />
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+            AI Trading Platform
+          </Typography>
+          
+          {/* Connection Status */}
           <Chip
-            label={connectionStatus === 'Connected' ? 'Live' : 'Offline'}
-            color={connectionStatus === 'Connected' ? 'success' : 'error'}
+            label={connectionStatus.connected ? 'Connected' : 'Disconnected'}
+            color={connectionStatus.connected ? 'success' : 'error'}
             size="small"
+            sx={{ mr: 2 }}
           />
-          <IconButton onClick={handleRefresh} color="primary">
+          
+          <IconButton color="inherit" onClick={handleRefresh}>
             <Refresh />
           </IconButton>
+          
+          <IconButton color="inherit">
+            <Notifications />
+          </IconButton>
+          
+          <ThemeToggle />
+          
+          <Typography variant="body2" sx={{ mx: 2 }}>
+            Welcome, {user?.name || user?.email}
+          </Typography>
+          
+          <Button color="inherit" onClick={handleLogout} startIcon={<Logout />}>
+            Logout
+          </Button>
+        </Toolbar>
+      </AppBar>
+
+      {/* Notifications */}
+      {notifications.length > 0 && (
+        <Box sx={{ p: 2 }}>
+          {notifications.slice(-3).map((notification) => (
+            <Alert
+              key={notification.id}
+              severity={notification.type}
+              onClose={() => dismissNotification(notification.id)}
+              sx={{ mb: 1 }}
+            >
+              {notification.message}
+            </Alert>
+          ))}
         </Box>
-      </Box>
+      )}
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
+        <Box sx={{ p: 2 }}>
+          <Alert severity="error">
+            {error}
+          </Alert>
+        </Box>
       )}
+
+      <Box sx={{ p: 3 }}>
+        {/* Header */}
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+          <Typography variant="h4" component="h1" fontWeight="bold">
+            Trading Dashboard
+          </Typography>
+        </Box>
 
       {/* Key Metrics */}
       <Grid container spacing={3} mb={3}>
@@ -317,6 +442,9 @@ const Dashboard = () => {
             <Tab label="Signals" />
             <Tab label="Accounts" />
             <Tab label="Trading Bot" />
+            <Tab label="Portfolio" />
+            <Tab label="Advanced Trading" />
+            <Tab label="AI Bot Status" />
             <Tab label="Analytics" />
           </Tabs>
         </Box>
@@ -381,7 +509,7 @@ const Dashboard = () => {
           )}
 
           {activeTab === 1 && (
-            <SignalsList signals={dashboardData.recentSignals || []} />
+            <SignalsList signals={tradingSignals || []} />
           )}
 
           {activeTab === 2 && (
@@ -393,10 +521,23 @@ const Dashboard = () => {
           )}
 
           {activeTab === 4 && (
+            <PortfolioManagement data={portfolioData} />
+          )}
+
+          {activeTab === 5 && (
+            <AdvancedTrading />
+          )}
+
+          {activeTab === 6 && (
+            <AIBotStatus />
+          )}
+
+          {activeTab === 7 && (
             <MarketSentiment sentiment={dashboardData.marketSentiment} />
           )}
         </CardContent>
       </Card>
+      </Box>
     </Box>
   );
 };
